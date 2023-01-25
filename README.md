@@ -30,3 +30,65 @@
 <br>![image](https://user-images.githubusercontent.com/103268341/214565714-c971a9e9-614f-4dca-bf5b-199216cef0b4.png)
 <br> Так же как и выше были созданы проверки с обязательным заполнением полей. 
 <br> Еще было реализовано несколько проверок связанных с датой. Код можно посмотреть по ссылке в заголовке
+
+## 3.
+  Для передачи доработки в банк было необходимо создать операцию, которая бы создала необходимые льготные категории, функционал, который будет представлен ниже и заполнить справочник из пункта 2.
+  <br>
+ 
+ Операция создания всего функционала -  <a href="https://github.com/phello57/cftdevelop/blob/main/CONV_57/U20221127_S38_01.plp">Код<a/>
+  <br>
+  Логи :
+  <br>
+  ![image](https://user-images.githubusercontent.com/103268341/214572145-a40ce493-758e-4b0e-802e-b60a98e62c6e.png)
+<br>
+Операция удаления всего функционала -  <a href="https://github.com/phello57/cftdevelop/blob/main/CONV_57/U20221228_S38_D.plp">Код<a/>
+   <br>
+  Логи :
+  <br>
+![image](https://user-images.githubusercontent.com/103268341/214572209-9e66c0d6-07af-463b-81a0-5acb752ce00b.png)
+<br>
+
+  
+  
+## 4. <a href="https://github.com/phello57/cftdevelop/blob/main/MAIN_DOCUM/S38_MARKING_L.plp">Код<a/> 
+<br>
+Необходимо было помечать документы, которые по кредитовому или дебетовому счету принадлежат к кредитам моей доработки
+<br>
+Пометку необходимо было реализовать в массиве "История состояний" записью с категорией по кредиту
+<br>
+  
+![image](https://user-images.githubusercontent.com/103268341/214574190-85245b42-a9bd-496c-9960-73bc05254883.png)
+
+<br>
+S38_NOTE_CAT .7 - либо у дебетового счета, либо у кредитового ставка льготы 0.7 - Льготная 70%
+<br>
+
+## 5.
+Так же нужно было спланировать проценты по кредиту в зависимости от категории, принадлежащей этому кредиту
+  
+<br>
+Работал с вычисляемым параметром и вводил его для кредита
+<br>
+
+![image](https://user-images.githubusercontent.com/103268341/214580653-32052534-1d3b-4fa7-b28d-e1eed8381fe3.png)
+
+<br>
+У кредита .5 ставка
+
+<br>
+  
+## 6. <a href="https://github.com/phello57/cftdevelop/blob/main/MAIN_DOCUM/S38_EXPORT_L_2.plp">Код<a/>
+Необходимо было по документам, у которых есть запись из 4 пункта сделать выгрузку в EXCEL и XML
+<br>
+![image](https://user-images.githubusercontent.com/103268341/214581797-ba63d304-4e06-431f-9b0d-9625ca3733d4.png)
+
+<br>EXCEL :
+<br>
+![image](https://user-images.githubusercontent.com/103268341/214582401-89c60d88-fc9d-4289-887d-41b8f488459a.png)
+<br>
+<br>XML :
+<br>
+![image](https://user-images.githubusercontent.com/103268341/214582689-450af7e8-6cfc-42c3-9a23-40e4b539e7af.png)
+<br>
+  
+<br>
