@@ -1,0 +1,147 @@
+class S38_KREDIT_INFO;
+
+@name('Добавить')
+@tag('CREATED')
+constructor NEW_AUTO is
+pragma include([DEBUG_TRIGGER].[MACRO_LIB]);
+NEW_AUTO (
+	@name('Кредит') P_NUM_DOG_CRED in [PR_CRED_REF],
+	@name('Дата начала') P_DATE_START in [DATE],
+	@name('Дата окончания') P_DATE_END in [DATE],
+	@name('Категория') P_CATEGORY in [S38_KREDIT_L_REF]
+) return ref [S38_KREDIT_INFO] is
+
+validate is
+begin
+	if p_message = 'DEFAULT' then
+		P_NUM_DOG_CRED := this.[NUM_DOG_CRED];
+		P_CATEGORY := this.[CATEGORY];
+		P_DATE_START := this.[DATE_START];
+		P_DATE_END := this.[DATE_END];
+	end if;
+	
+end;
+execute is
+r_identical_dog ref [S38_KREDIT_INFO];
+r_test_kred_info_date ref [S38_KREDIT_INFO];
+r_del_note_identical_date ref [S38_KREDIT_INFO];
+begin
+	
+	/* Проверка на всё */
+	if P_NUM_DOG_CRED is null
+	AND P_DATE_START is null 
+	AND P_CATEGORY is null
+	then
+		pragma ERROR('Нельзя создать запись.'
+			|| NL$ ||'Заполните обязательные поля: Категория, Дата начала.'
+			|| NL$ ||'Выберите кредит.'
+					);
+	end if;
+	
+	/* Двойная проверка */
+	if P_NUM_DOG_CRED is null
+	AND P_DATE_START is null 
+	then
+		pragma ERROR('Нельзя создать запись.'
+			|| NL$ ||'Заполните обязательное поле: Дата начала.'
+			|| NL$ ||'И выберите кредит.'
+					);
+	end if;
+	if P_NUM_DOG_CRED is null
+	AND P_CATEGORY is null 
+	then
+		pragma ERROR('Нельзя создать запись.'
+			|| NL$ ||'Заполните обязательные поля: Категория.'
+			|| NL$ ||'Выберите кредит.'
+					);
+	end if;
+	if P_DATE_START is null 
+	AND P_CATEGORY is null
+	then
+		pragma ERROR('Нельзя создать запись.'
+			|| NL$ ||'Заполните обязательные поля: Категория, Дата начала.'
+					);
+	end if;
+	
+	/* Одиночная проверка */
+	if P_NUM_DOG_CRED is null
+	then
+		pragma ERROR('Нельзя создать запись.'
+			|| NL$ ||'Выберите кредит.'
+					);
+	end if;
+	if P_DATE_START is null
+	then
+		pragma ERROR('Нельзя создать запись.'
+			|| NL$ ||'Заполните обязательное поле: Дата начала.'
+					);
+	end if;
+	if P_CATEGORY is null
+	then
+		pragma ERROR('Нельзя создать запись.'
+			|| NL$ ||'Заполните обязательное поле: Категория.'
+					);
+	end if;
+	
+	/* Проверка пересечения дат  */
+	begin
+	locate r_test_kred_info_date  in ::[S38_KREDIT_INFO] 
+		where r_test_kred_info_date.[NUM_DOG_CRED] = P_NUM_DOG_CRED
+		AND r_test_kred_info_date.[DATE_START] > P_DATE_START
+		AND r_test_kred_info_date.[DATE_END] is null;
+	exception when NO_DATA_FOUND then null;
+	end;
+	
+	if r_test_kred_info_date  is not null then
+		pragma error('Нельзя создать запись.'
+					|| NL$ ||'Дата начала находится в интервале прошлого льготного периода.'
+					|| NL$ ||'Измените Дату начала и повторите попытку.'
+					);
+	end if;
+		
+	/* Дата начала не может быть позже Даты окончания */
+	if P_DATE_START > P_DATE_END then
+		pragma error('Нельзя создать запись.'
+			|| NL$ ||'Дата начала позже Даты окончания'
+			|| NL$ ||'Измените Дату Начала или Дату окончания и повторите попытку'
+					);
+	end if;
+	
+	/* Обновление даты окончания другой записи */	
+	begin
+		locate r_identical_dog in ::[S38_KREDIT_INFO]
+			where r_identical_dog.[NUM_DOG_CRED] = P_NUM_DOG_CRED
+			AND r_identical_dog.[DATE_START] < P_DATE_START
+			AND r_identical_dog.[DATE_END] is null;
+	exception when NO_DATA_FOUND then null;
+	end;	
+		
+	if r_identical_dog is not null then
+		r_identical_dog.[DATE_END] := P_DATE_START - 1;
+	end if;	
+
+	/* Удаление предыдущей записи с одинаковой датой */
+	begin
+		select x(x) in [S38_KREDIT_INFO]
+		where x.[NUM_DOG_CRED] = P_NUM_DOG_CRED
+		AND x.[DATE_START] = P_DATE_START
+		AND x.[DATE_END] is null
+		into r_del_note_identical_date;
+		
+		if r_del_note_identical_date is not null then
+			r_del_note_identical_date.[DELETE_AUTO]();
+			stdio.put_line_buf('Была найдена запись по этому кредитному договору с такой же Датой начала.'
+				  		|| NL$ ||'Прошлая запись была удалена.'
+			);
+			
+		end if;
+	exception when NO_DATA_FOUND then null;
+	
+	end; 
+	[NUM_DOG_CRED] := P_NUM_DOG_CRED;
+	[CATEGORY] := P_CATEGORY;
+	[DATE_START] := P_DATE_START;
+	[DATE_END] := P_DATE_END;
+end;	
+end;
+end;

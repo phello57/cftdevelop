@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MethodPresentation classId="S38_KREDIT_INFO" formatVersion="1.2" shortName="NEW_AUTO">
+    <Properties>
+        <Hotkey>F2</Hotkey>
+        <InterpretBufferCommands>true</InterpretBufferCommands>
+        <ReloadViewAfterExecute>true</ReloadViewAfterExecute>
+        <UserDriven>true</UserDriven>
+    </Properties>
+    <Parameters>
+        <Parameter shortName="P_NUM_DOG_CRED">
+            <ViewClassId>PR_CRED</ViewClassId>
+            <ViewShortName>VW_CRIT_PRCRED_S38</ViewShortName>
+        </Parameter>
+    </Parameters>
+    <Variables/>
+    <Controls>
+        <Form>
+            <Properties>
+                <Caption>Добавить</Caption>
+                <Height>325</Height>
+                <ValidateName>Form1</ValidateName>
+                <Width>305</Width>
+            </Properties>
+            <Controls>
+                <Object>
+                    <Properties>
+                        <Caption>Кредит</Caption>
+                        <CheckValidate>true</CheckValidate>
+                        <ClassId>PR_CRED_REF</ClassId>
+                        <Height>24</Height>
+                        <Left>16</Left>
+                        <Qualifier>%PARAM%.P_NUM_DOG_CRED</Qualifier>
+                        <TabIndex>1</TabIndex>
+                        <Tips>Объект: Кредит</Tips>
+                        <Top>16</Top>
+                        <ValidateName>Object1</ValidateName>
+                        <Width>120</Width>
+                    </Properties>
+                </Object>
+                <Label>
+                    <Properties>
+                        <Caption>Дата начала</Caption>
+                        <Height>24</Height>
+                        <Left>16</Left>
+                        <Qualifier>%PARAM%.P_DATE_START</Qualifier>
+                        <Tips>Поясняющая надпись (Дата начала)</Tips>
+                        <Top>208</Top>
+                        <ValidateName>Label1</ValidateName>
+                        <Width>120</Width>
+                    </Properties>
+                </Label>
+                <Date>
+                    <Properties>
+                        <Caption>Дата начала</Caption>
+                        <CheckValidate>true</CheckValidate>
+                        <ClassId>DATE</ClassId>
+                        <Left>152</Left>
+                        <Qualifier>%PARAM%.P_DATE_START</Qualifier>
+                        <TabIndex>3</TabIndex>
+                        <Tips>Дата начала</Tips>
+                        <Top>208</Top>
+                        <ValidateName>Date1</ValidateName>
+                    </Properties>
+                </Date>
+                <Label>
+                    <Properties>
+                        <Caption>Дата окончания</Caption>
+                        <Height>24</Height>
+                        <Left>16</Left>
+                        <Qualifier>%PARAM%.P_DATE_END</Qualifier>
+                        <Tips>Поясняющая надпись (Дата окончания)</Tips>
+                        <Top>240</Top>
+                        <ValidateName>Label2</ValidateName>
+                        <Width>120</Width>
+                    </Properties>
+                </Label>
+                <Date>
+                    <Properties>
+                        <Caption>Дата окончания</Caption>
+                        <CheckValidate>true</CheckValidate>
+                        <ClassId>DATE</ClassId>
+                        <Left>152</Left>
+                        <Qualifier>%PARAM%.P_DATE_END</Qualifier>
+                        <TabIndex>5</TabIndex>
+                        <Tips>Дата окончания</Tips>
+                        <Top>240</Top>
+                        <ValidateName>Date2</ValidateName>
+                    </Properties>
+                </Date>
+                <Object>
+                    <Properties>
+                        <Caption>Категория</Caption>
+                        <CheckValidate>true</CheckValidate>
+                        <ClassId>S38_KREDIT_L_REF</ClassId>
+                        <Height>24</Height>
+                        <Left>16</Left>
+                        <Qualifier>%PARAM%.P_CATEGORY</Qualifier>
+                        <TabIndex>6</TabIndex>
+                        <Tips>Объект: Категория</Tips>
+                        <Top>88</Top>
+                        <ValidateName>Object2</ValidateName>
+                        <Width>120</Width>
+                    </Properties>
+                </Object>
+                <Button>
+                    <Properties>
+                        <Caption>OK</Caption>
+                        <Height>24</Height>
+                        <Left>8</Left>
+                        <Qualifier>OK</Qualifier>
+                        <TabIndex>7</TabIndex>
+                        <Tips>Выполнить операцию</Tips>
+                        <Top>288</Top>
+                        <ValidateName>Ok</ValidateName>
+                        <Width>140</Width>
+                    </Properties>
+                </Button>
+                <Button>
+                    <Properties>
+                        <Caption>Отмена</Caption>
+                        <Height>24</Height>
+                        <Left>156</Left>
+                        <Qualifier>CANCEL</Qualifier>
+                        <TabIndex>8</TabIndex>
+                        <Tips>Отказ от выполнения</Tips>
+                        <Top>288</Top>
+                        <ValidateName>Cancel</ValidateName>
+                        <Width>140</Width>
+                    </Properties>
+                </Button>
+                <Label>
+                    <Properties>
+                        <Caption>Номер договора</Caption>
+                        <Depend>%PARAM%.P_NUM_DOG_CRED</Depend>
+                        <Height>24</Height>
+                        <Left>16</Left>
+                        <Qualifier>%PARAM%.P_NUM_DOG_CRED.NUM_DOG</Qualifier>
+                        <Tips>Поясняющая надпись (Номер договора)</Tips>
+                        <Top>48</Top>
+                        <ValidateName>Label3</ValidateName>
+                        <Width>120</Width>
+                    </Properties>
+                </Label>
+                <Text>
+                    <Properties>
+                        <CheckValidate>true</CheckValidate>
+                        <ClassId>PRODUCT_NUM</ClassId>
+                        <Depend>%PARAM%.P_NUM_DOG_CRED</Depend>
+                        <Height>24</Height>
+                        <Left>152</Left>
+                        <Qualifier>%PARAM%.P_NUM_DOG_CRED.NUM_DOG</Qualifier>
+                        <TabIndex>0</TabIndex>
+                        <Tips>Номер договора</Tips>
+                        <Top>48</Top>
+                        <ValidateName>Text1</ValidateName>
+                        <Width>140</Width>
+                    </Properties>
+                </Text>
+                <Label>
+                    <Properties>
+                        <Caption>Наименование</Caption>
+                        <Depend>%PARAM%.P_CATEGORY</Depend>
+                        <Height>24</Height>
+                        <Left>16</Left>
+                        <Qualifier>%PARAM%.P_CATEGORY.NAME</Qualifier>
+                        <Tips>Поясняющая надпись (Наименование)</Tips>
+                        <Top>124</Top>
+                        <ValidateName>Label4</ValidateName>
+                        <Width>120</Width>
+                    </Properties>
+                </Label>
+                <Text>
+                    <Properties>
+                        <CheckValidate>true</CheckValidate>
+                        <ClassId>STRING_100</ClassId>
+                        <Depend>%PARAM%.P_CATEGORY</Depend>
+                        <Height>24</Height>
+                        <Left>152</Left>
+                        <Qualifier>%PARAM%.P_CATEGORY.NAME</Qualifier>
+                        <TabIndex>0</TabIndex>
+                        <Tips>Наименование</Tips>
+                        <Top>124</Top>
+                        <ValidateName>Text2</ValidateName>
+                        <Width>132</Width>
+                    </Properties>
+                </Text>
+                <Label>
+                    <Properties>
+                        <Caption>Коэффициент</Caption>
+                        <Depend>%PARAM%.P_CATEGORY</Depend>
+                        <Height>24</Height>
+                        <Left>16</Left>
+                        <Qualifier>%PARAM%.P_CATEGORY.KOEF</Qualifier>
+                        <Tips>Поясняющая надпись (Коэффициент)</Tips>
+                        <Top>160</Top>
+                        <ValidateName>Label5</ValidateName>
+                        <Width>120</Width>
+                    </Properties>
+                </Label>
+                <Number>
+                    <Properties>
+                        <Caption>Коэффициент</Caption>
+                        <CheckValidate>true</CheckValidate>
+                        <ClassId>NUMBER_20_8</ClassId>
+                        <Depend>%PARAM%.P_CATEGORY</Depend>
+                        <Height>24</Height>
+                        <Left>152</Left>
+                        <Qualifier>%PARAM%.P_CATEGORY.KOEF</Qualifier>
+                        <TabIndex>0</TabIndex>
+                        <Tips>Коэффициент</Tips>
+                        <Top>160</Top>
+                        <ValidateName>Number1</ValidateName>
+                        <Width>132</Width>
+                    </Properties>
+                </Number>
+            </Controls>
+        </Form>
+    </Controls>
+</MethodPresentation>

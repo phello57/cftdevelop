@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ViewPresentation classId="S38_KREDIT_INFO" shortName="VW_CRIT_S38_KREDIT_INFO">
+    <Properties/>
+    <Columns>
+        <Column alias="C_NUM_DOG_CRED" referenceId="1">
+            <Name>Кредит # Номер договора</Name>
+            <Resizeable>true</Resizeable>
+            <Width>10</Width>
+            <Navigation>
+                <Transition>auto</Transition>
+            </Navigation>
+        </Column>
+        <Column alias="C_DATE_START" referenceId="0">
+            <Name>Дата начала</Name>
+            <DateFormat>Default(dd/MM/yyyy)</DateFormat>
+            <Resizeable>true</Resizeable>
+            <Width>10</Width>
+        </Column>
+        <Column alias="C_DATE_END" referenceId="0">
+            <Name>Дата окончания</Name>
+            <DateFormat>Default(dd/MM/yyyy)</DateFormat>
+            <Resizeable>true</Resizeable>
+            <Width>10</Width>
+        </Column>
+        <Column alias="C_NAME" referenceId="1">
+            <Name>Категория # Наименование</Name>
+            <Resizeable>true</Resizeable>
+            <Width>16</Width>
+            <Navigation>
+                <Transition>auto</Transition>
+            </Navigation>
+        </Column>
+        <Column alias="C_KOEF" referenceId="1">
+            <Name>Категория # Коэффициент</Name>
+            <Align>right</Align>
+            <NumberPrecision>8</NumberPrecision>
+            <Resizeable>true</Resizeable>
+            <Width>19</Width>
+            <Navigation>
+                <Transition>auto</Transition>
+            </Navigation>
+        </Column>
+    </Columns>
+</ViewPresentation>

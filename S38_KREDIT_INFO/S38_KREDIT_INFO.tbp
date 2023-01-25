@@ -1,0 +1,9 @@
+@dictionary
+@entity('TYPE')
+@name('S38. Кредиты. Принадлежность к категории')
+class S38_KREDIT_INFO {
+	@name('Кредит')         NUM_DOG_CRED [PR_CRED_REF];
+	@name('Дата начала')    DATE_START   [DATE];
+	@name('Дата окончания') DATE_END     [DATE];
+	@name('Категория')      CATEGORY     [S38_KREDIT_L_REF];
+}
