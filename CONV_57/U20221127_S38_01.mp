@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MethodPresentation classId="CONV_57" formatVersion="1.2" shortName="U20221127_S38_01">
+    <Properties>
+        <Hotkey>Ctrl+Shift+L</Hotkey>
+        <InterpretBufferCommands>true</InterpretBufferCommands>
+        <RunMonitor>true</RunMonitor>
+        <UserDriven>true</UserDriven>
+    </Properties>
+    <Parameters/>
+    <Variables/>
+    <Controls>
+        <Form>
+            <Properties>
+                <Caption>S38 Заполнение справочника S38 Категория ссуды</Caption>
+                <Height>145</Height>
+                <ValidateName>Form1</ValidateName>
+                <Width>304</Width>
+            </Properties>
+            <Controls>
+                <Button>
+                    <Properties>
+                        <Caption>OK</Caption>
+                        <Height>24</Height>
+                        <Left>8</Left>
+                        <Qualifier>OK</Qualifier>
+                        <TabIndex>1</TabIndex>
+                        <Tips>Выполнить операцию</Tips>
+                        <Top>108</Top>
+                        <ValidateName>Ok</ValidateName>
+                        <Width>140</Width>
+                    </Properties>
+                </Button>
+                <Button>
+                    <Properties>
+                        <Caption>Отмена</Caption>
+                        <Height>24</Height>
+                        <Left>156</Left>
+                        <Qualifier>CANCEL</Qualifier>
+                        <TabIndex>2</TabIndex>
+                        <Tips>Отказ от выполнения</Tips>
+                        <Top>108</Top>
+                        <ValidateName>Cancel</ValidateName>
+                        <Width>140</Width>
+                    </Properties>
+                </Button>
+                <Label>
+                    <Properties>
+                        <Caption>Укажите название Точки вызова</Caption>
+                        <Height>24</Height>
+                        <Left>12</Left>
+                        <Tips>Надпись</Tips>
+                        <Top>16</Top>
+                        <ValidateName>Label2</ValidateName>
+                        <Width>208</Width>
+                    </Properties>
+                </Label>
+                <Text>
+                    <Properties>
+                        <CheckValidate>true</CheckValidate>
+                        <ClassId>STRING_64</ClassId>
+                        <Height>24</Height>
+                        <Left>12</Left>
+                        <Qualifier>%PARAM%.STR_GET_METHOD_CODE</Qualifier>
+                        <TabIndex>0</TabIndex>
+                        <Tips>Название</Tips>
+                        <Top>48</Top>
+                        <ValidateName>Text1</ValidateName>
+                        <Width>208</Width>
+                    </Properties>
+                </Text>
+            </Controls>
+        </Form>
+    </Controls>
+</MethodPresentation>

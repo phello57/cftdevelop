@@ -1,0 +1,246 @@
+class CONV_57;
+
+@name('S38 Создание')
+static method U20221127_S38_01 is
+
+/* Банк.продукты -> CONV_57 -> ctrl+shift+L 
+	 * Добавление записей в ТБП
+	 * */
+public STR_APPAUX_CALLPOINT_METHOD_CODE [STRING_64];
+
+
+procedure CreateLoanCateg(code in string, 
+						  name in string,
+						  kind_cred in string,
+						  koef in number
+						  )			  
+is
+r_s38_credit_loan ref [S38_KREDIT_LOAN];
+r_s38_kind_cred ref [KIND_CREDITS];
+begin
+	if kind_cred is not null then
+		locate r_s38_kind_cred in ::[KIND_CREDITS] all
+		where r_s38_kind_cred.[NAME] = kind_cred;
+	end if;
+	
+	begin
+		locate r_s38_credit_loan in ::[S38_KREDIT_LOAN] all
+		where r_s38_credit_loan.[NAME] = name 
+		OR r_s38_credit_loan.[CODE] = code;
+		::[CONV].[LOG].WriteMess('  Найдена похожая категория, Наименование = '
+								 || r_s38_credit_loan.[NAME]
+								 ||', Коэффицент = '||r_s38_credit_loan.[KOEF]
+								 || '         Добавление не требуется'
+		);
+								  
+	exception when no_data_found then
+		r_s38_credit_loan := 
+		::[S38_KREDIT_LOAN].[NEW_AUTO](P_CODE == code,
+				   						P_NAME == name,
+				   						P_KIND_CRED == r_s38_kind_cred,
+				   						P_KOEF == koef				   
+										);
+		::[CONV].[LOG].WriteMess('  Добавлена новая категория Наименование = '
+								 || r_s38_credit_loan.[NAME] 
+								 ||', Коэффицент = '||r_s38_credit_loan.[KOEF]);
+	end;
+end;
+				
+-- -----------------------------------
+
+procedure creat_items_S38_kred_info is
+	r_calc_category REF [S38_KREDIT_LOAN];
+begin
+	/* По действующим КД проставит произвольную категорию */
+	::[CONV].[LOG].WriteMess(NL$|| 'Начинаем заполнение ТБП "S38_KREDIT_INFO"');
+						 
+	for i in ::[KRED_PERS]
+		where i.[PRJ_KIND_CRED].[NAME] like 'S38%'
+		AND i.[DATE_CLOSE] is null
+	loop
+		/* Вычисляем(произвольно) категорию кредита */	
+		if i.date_begin < to_date('01.01.2020','DD/MM/YYYY') then
+			select x(x) in [S38_KREDIT_LOAN]
+			where x.KOEF = 0.7
+			into r_calc_category;
+			
+		elsif i.DATE_BEGIN > to_date('01.01.2020','DD/MM/YYYY') then
+			select y(y) in [S38_KREDIT_LOAN]
+			where y.KOEF = 1
+			into r_calc_category;
+		end if;
+	
+-- ------------
+
+		/* Добавляем записи в [S38_KREDIT_INFO] */
+		
+	declare
+		r_s38_kred_info [S38_KREDIT_INFO];
+	begin
+		locate r_s38_kred_info in ::[S38_KREDIT_INFO] all
+		where r_s38_kred_info.[NUM_DOG_CRED] = i;
+			::[CONV].[LOG].WriteMess('  Найден кредит. Номер = ' || r_s38_kred_info.[NUM_DOG_CRED].[NUM_DOG]||
+								 	 NL$|| '   Категория = ' || r_s38_kred_info.[CATEGORY].[NAME] || 
+								 	 '     Добавление не требуется'
+								 	 );
+								 	 
+		exception when no_data_found then
+			r_s38_kred_info :=
+			::[S38_KREDIT_INFO].[NEW_AUTO](P_NUM_DOG_CRED == i,
+										   P_DATE_START == i.DATE_BEGIN,
+										   P_DATE_END == i.DATE_CLOSE,
+										   P_CATEGORY == r_calc_category
+										   );
+			::[CONV].[LOG].WriteMess('  Добавлен новый экземпляр,Номер =' || r_s38_kred_info.[NUM_DOG_CRED]
+									||NL$ || '   Коэффицент = ' || r_s38_kred_info.[CATEGORY].[KOEF]);
+		end;
+	end loop;
+end;
+
+-- -----------------------------------
+
+procedure creat_s38_hook is
+	r_appaux_calloint ref [APPAUX_CALLPOINT];
+	r_new_method ref [AUXAPP_METHOD];
+	sct_new_method [AUXAPP_METHOD];
+begin
+	::[CONV].[LOG].WriteMess(NL$||'Добавляем операцию S38_MARKING_L в массив (MD_FOR_PROV)'
+								||'ТБП "APPAUX_CALLPOINT" ');	
+						  
+	locate r_appaux_calloint in ::[APPAUX_CALLPOINT] all
+	where r_appaux_calloint.[CODE] = STR_APPAUX_CALLPOINT_METHOD_CODE;
+	
+	begin
+		select x(x) in r_appaux_calloint.[METHODS]
+		where x.[SNAME] = 'S38_MARKING_L'
+			into r_new_method;
+			
+	if r_new_method is not null then
+		::[CONV].[LOG].WriteMess('  Операция S38_MARKING_L уже создана');
+	end if;
+	
+	exception when no_data_found then
+		sct_new_method.[PRIORITY] := 30;
+		sct_new_method.[CLS] := 'MAIN_DOCUM';
+		sct_new_method.[SNAME] := 'S38_MARKING_L';
+		
+		insert sct_new_method into r_appaux_calloint.[METHODS];
+		r_appaux_calloint.[RECOMPILE]; 
+		
+		::[CONV].[LOG].WriteMess('  Выч.пар. S38_MARKING_L добавлен в массив MD_FOR_PROV');
+	end;
+end;
+
+-- -----------------------------------
+
+procedure creat_s38_calc_param is
+
+	r_calc_param ref [CALC_PARAMS];
+begin
+	/* Добавление в справочник «Вычисляемые параметры» записи  S38_ЛЬГОТ_КОЭФ*/	
+::[CONV].[LOG].WriteMess(NL$||'Добавляем в ТБП "CALC_PARAMS" параметр S38_ЛЬГОТ_КОЭФ');
+	
+	locate r_calc_param in ::[CALC_PARAMS]
+	where r_calc_param.[CODE] = 'S38_ЛЬГОТ_КОЭФ';
+	
+	if r_calc_param is not null then
+		::[CONV].[LOG].WriteMess('  Параметр S38_ЛЬГОТ_КОЭФ уже существует.');							 
+	end if;
+	exception when no_data_found then
+		::[CALC_PARAMS].[NEW#AUTO](P#NAME == 'S38. Определение льготного коэффициента',
+							   P#CODE == 'S38_ЛЬГОТ_КОЭФ',
+							   P#GROUP == 'PR_CRED',
+							   P#METHOD == 'S38_DEF_LOANKOEF',
+							   P#CLASS == 'PR_CRED',
+							   P#TYPE_RESULT == 'N',
+							   P_NOTE == 'S38. Определение льготного коэффициента к комиссии за обслуживание'
+							  );
+		::[CALC_PARAMS].[MAKE_CP_LIBS]();				  
+		::[CONV].[LOG].WriteMess('  Параметр S38_ЛЬГОТ_КОЭФ создан успешно.');	
+	
+end;
+
+-- -----------------------------------
+
+U20221127_S38_01 
+(
+	@name('Название') STR_GET_METHOD_CODE in [STRING_64]
+)
+is
+
+-- -----------------------------------
+
+validate is
+	r_appaux_calloint ref [APPAUX_CALLPOINT];
+begin
+	/* Для удобства, что бы каждый раз не прописывать */
+	if P_MESSAGE = 'DEFAULT' then
+		STR_GET_METHOD_CODE := 'MD_FOR_PROV';
+		
+		STR_APPAUX_CALLPOINT_METHOD_CODE := STR_GET_METHOD_CODE;
+		
+	end if;
+	if P_MESSAGE = 'VALIDATE' then
+		if STR_GET_METHOD_CODE is null then
+			pragma error('Укажите название Точки вызова');
+		end if;
+		
+		locate r_appaux_calloint in ::[APPAUX_CALLPOINT] all
+		where r_appaux_calloint.[CODE] = STR_GET_METHOD_CODE;
+		
+		if r_appaux_calloint is null then
+			pragma error('Такой Точки вызова не найдено в справочнике [APPAUX_CALLPOINT]');
+		end if;
+
+	end if;
+end;
+
+-- -----------------------------------
+
+execute is
+begin
+::[CONV].[LOG].InitLOG(
+	P_FILE_NAME == 'P_S38_U20221127.LOG', 
+	P_TIME == true);
+	
+-- -----------------------------------	
+
+/* Создать 4 категории льгот В ТБП «S38 Кредиты. Категория ссуды» */
+	::[CONV].[LOG].WriteMess(NL$||'Добавляем новые категории в ТБП "S38_KREDIT_LOAN"');
+	
+	CreateLoanCateg(code == '1',
+					name == 'Стандартная',
+					kind_cred == null,
+					koef == 1
+					);
+	CreateLoanCateg(code == '2',
+					name == 'VIP',
+					kind_cred == 'Кредитный договор',
+					koef == 0.1
+					);
+	CreateLoanCateg(code == '3',
+					name == 'Льготная 70%',
+					kind_cred == null,
+					koef == 0.7
+					);
+	CreateLoanCateg(code == '4',
+					name == 'Льготная 50%',
+					kind_cred == null,
+					koef == 0.5
+					);
+									
+/* Создаем записи в [S38_KREDIT_INFO] */
+	creat_items_S38_kred_info();
+	
+/* Создаем хук */	
+	creat_s38_hook();
+	
+/* Создаем выч.пар */
+	creat_s38_calc_param();
+	
+-- -----------------------------------	
+	
+::[CONV].[LOG].InitLOG();
+end;
+end; 
+end;

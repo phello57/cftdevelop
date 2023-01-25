@@ -1,0 +1,135 @@
+class CONV_57;
+
+@name('S38 Удаление') 
+static method U20221228_S38_D is
+-- -----------------------------------
+/* Банк.продукты -> CONV_57 -> ctrl+shift+; */
+
+procedure del_items_S38_kred_categs is
+	type tt_s38_credit_loan is table of ref [S38_KREDIT_LOAN];
+	t_s38_credit_loan tt_s38_credit_loan;
+	begin
+		::[CONV].[LOG].WriteMess(NL$||'Начинаем удаление всех категорий из ТБП "S38_KREDIT_LOAN"');
+		
+		select x(x) in ::[S38_KREDIT_LOAN] all
+			into t_s38_credit_loan;
+			
+		if t_s38_credit_loan is not null then
+		
+			for i in 1..t_s38_credit_loan.count
+			loop
+				::[CONV].[LOG].WriteMess(NL$ ||'  Найдена категория - ' 
+											 || t_s38_credit_loan(i).[NAME]
+											 || '          Категория удалена.');
+				t_s38_credit_loan(i).[DELETE_AUTO]();
+			end loop;
+		end if;
+			::[CONV].[LOG].WriteMess('  Все категории удалены.'|| NL$);			   
+	end;
+
+-- -----------------------------------
+
+procedure del_items_S38_kred_info is
+	type tt_s38_credit_info is table of ref [S38_KREDIT_INFO];
+	t_s38_credit_info tt_s38_credit_info;
+	begin
+		::[CONV].[LOG].WriteMess(NL$||'Начинаем удаление всех экземпляров из ТБП "S38_KREDIT_INFO"');
+		
+		select x(x) in ::[S38_KREDIT_INFO] all
+			into t_s38_credit_info;
+			
+		if t_s38_credit_info is not null then
+			
+			for i in 1..t_s38_credit_info.count	
+			loop
+				::[CONV].[LOG].WriteMess(NL$ ||'  Найден экземпляр ID =' 
+											 ||t_s38_credit_info(i)
+											 ||'          Экземпляр удален.');
+				t_s38_credit_info(i).[DELETE_AUTO]();
+			end loop;
+		end if;
+	
+			::[CONV].[LOG].WriteMess('  Все экземпляры удалены.'|| NL$);
+		
+													   
+	end;
+
+-- -----------------------------------
+
+procedure del_s38_hook is
+	r_appaux_calloint ref [APPAUX_CALLPOINT];
+	new_method ref [AUXAPP_METHOD];
+	
+	begin
+		::[CONV].[LOG].WriteMess(NL$||NL$||'Начинаем удаление метода S38_MARKING_L из методов MD_FOR_PROV');
+		
+		/* Я беру глоб.переменную, которую ввел юзер при запуске Создания. Ввел он название Точки вызова.*/
+		locate r_appaux_calloint in ::[APPAUX_CALLPOINT] all
+		where r_appaux_calloint.[CODE] = ::[CONV_57].[U20221127_S38_01].STR_APPAUX_CALLPOINT_METHOD_CODE;
+		
+		begin
+			select x(x) in r_appaux_calloint.[METHODS]
+			where x.[SNAME] = 'S38_MARKING_L'
+				into new_method;
+			
+			if new_method.[SNAME] is not null then
+				r_appaux_calloint.[METHODS]%delete(new_method);
+				r_appaux_calloint.[RECOMPILE];
+				
+				::[CONV].[LOG].WriteMess('  Метод S38_MARKING_L удален из методов '||::[CONV_57].[U20221127_S38_01].STR_APPAUX_CALLPOINT_METHOD_CODE);
+			end if;
+		exception when no_data_found then
+			::[CONV].[LOG].WriteMess('  Метод S38_MARKING_L отсутствует в методах '||::[CONV_57].[U20221127_S38_01].STR_APPAUX_CALLPOINT_METHOD_CODE);
+		end;
+	end;
+
+-- -----------------------------------
+
+procedure del_s38_calc_param is
+		r_calc_param ref [CALC_PARAMS];
+	begin
+		::[CONV].[LOG].WriteMess(NL$||NL$||'Начинаем удаление выч.параметра из ТБП "CALC_PARAMS"');
+		
+			
+		locate r_calc_param in ::[CALC_PARAMS]
+			where r_calc_param.[CODE] = 'S38_ЛЬГОТ_КОЭФ';	
+		
+		if r_calc_param is not null then
+			r_calc_param.[DELETE#AUTO]();
+
+			::[CALC_PARAMS].[MAKE_CP_LIBS]();
+			::[CONV].[LOG].WriteMess('  Параметр S38_ЛЬГОТ_КОЭФ удалён.');
+		end if;
+		
+		exception when no_data_found then
+			::[CONV].[LOG].WriteMess('  Параметр S38_ЛЬГОТ_КОЭФ не существует.');
+			
+	end;
+
+-- -----------------------------------
+
+U20221228_S38_D is
+execute is
+begin
+	::[CONV].[LOG].InitLOG(
+		P_FILE_NAME == 'P_U20221228_S38_D.LOG', 
+		P_TIME == true);
+-- -----------------------------------		
+	
+	
+	/* Удаление данных из созданных справочников */						   
+	del_items_S38_kred_info();
+	del_items_S38_kred_categs();
+	
+	/* Удаление хука */
+	del_s38_hook();
+	
+	/* Удаление вычисляемого параметра */
+--	del_s38_calc_param();
+	
+-- -----------------------------------	
+	::[CONV].[LOG].InitLOG();
+end;
+
+end; 
+end; 
