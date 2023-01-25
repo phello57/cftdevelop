@@ -1,0 +1,9 @@
+@dictionary
+@entity('TYPE')
+@name('S38. Кредиты. Категория ссуды')
+class S38_KREDIT_LOAN {
+	@name('Код')          CODE      [STRING_100];
+	@name('Наименование') NAME      [STRING_100];
+	@name('Вид кредита')  KIND_CRED [KIND_CREDITS_REF];
+	@name('Коэффициент')  KOEF      [NUMBER_20_8];
+}

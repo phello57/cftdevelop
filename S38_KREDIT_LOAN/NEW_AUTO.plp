@@ -1,0 +1,86 @@
+class S38_KREDIT_LOAN;
+
+@name('Добавить')
+@tag('CREATED')
+constructor NEW_AUTO is
+
+NEW_AUTO (
+	@name('Код') P_CODE in [STRING_100],
+	@name('Наименование') P_NAME in [STRING_100],
+	@name('Вид кредита') P_KIND_CRED in [KIND_CREDITS_REF],
+	@name('Коэффициент') P_KOEF in [NUMBER_20_8]
+) return ref [S38_KREDIT_LOAN] is
+
+validate is
+begin
+	if p_message = 'DEFAULT' then
+		P_CODE := this.[CODE];
+		P_NAME := this.[NAME];
+		P_KIND_CRED := this.[KIND_CRED];
+		P_KOEF := this.[KOEF];
+	end if;
+end;
+
+execute is
+r_identical_code ref [S38_KREDIT_LOAN];
+begin
+	
+	/* Проверка на всё */
+	if P_CODE is null AND
+	P_NAME is null AND
+	P_KOEF is null  then
+		pragma ERROR('Заполните обязательные поля: Код, Наименование, Коэффицент');	
+	end if;
+	
+	/* Проверки парой */
+	if P_CODE is null 
+	AND P_NAME is null 
+	then
+		pragma ERROR('Заполните обязательные поля: Код, Наименование');
+	end if;
+	if P_CODE is null 
+	AND P_KOEF is null
+	then
+		pragma ERROR('Заполните обязательные поля: Код, Коэффицент');
+	end if;
+	
+	if P_NAME is null 
+	AND P_KOEF is null
+	then
+		pragma ERROR('Заполните обязательные поля: Наименование, Коэффицент');
+	end if;
+	
+	/* Одиночные проверки */
+	if P_CODE is null 
+	then
+		pragma ERROR('Заполните обязательное поле: Код');
+	end if;
+	if P_NAME is null 
+	then
+		pragma ERROR('Заполните обязательное поле: Наименование');
+	end if;
+	if P_KOEF is null
+	then
+		pragma ERROR('Заполните обязательное поле: Коэффицент');
+	end if;
+	
+	/* Проверка на уникальность */
+	begin
+	locate r_identical_code in ::[S38_KREDIT_LOAN]
+	where r_identical_code.[CODE] = P_CODE;
+	exception when NO_DATA_FOUND then null;
+	end;
+	if r_identical_code is not null
+	then
+		pragma ERROR('Уже есть запись, в которой поле Код = ' || P_CODE
+					|| NL$ || 'Измените Код и повторите попытку.');
+		
+	end if;
+	
+	[CODE] := P_CODE;
+	[NAME] := P_NAME;
+	[KOEF] := P_KOEF;
+	[KIND_CRED] := P_KIND_CRED;
+end;
+end;
+end;

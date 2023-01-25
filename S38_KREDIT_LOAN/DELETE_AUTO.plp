@@ -1,0 +1,6 @@
+class S38_KREDIT_LOAN;
+
+@name('Удалить')
+@tag('CREATED')
+destructor DELETE_AUTO is
+end;
