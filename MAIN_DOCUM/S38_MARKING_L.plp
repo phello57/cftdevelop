@@ -1,0 +1,88 @@
+class MAIN_DOCUM;
+
+@optimize(false)
+@import_plsql(true)
+@this(create_on_start:=true)
+@name('S38 Маркировка д-ов с льготной к-ей')
+@tag('COPIED')
+static method S38_MARKING_L is
+--	&setcallmethod('MD_FOR_PROV', 1)
+
+	pragma include(::[DEBUG_TRIGGER].[MACRO_LIB]);
+	pragma include ('APPAUX_CALLPOINT.COMPILE_LIB');
+	
+S38_MARKING_L (
+	@name('Документ')                   DOCUMENT   in     [MAIN_DOCUM_REF],
+	@name('Тип вызова')                 P_MESS     in     [STRING_100]
+) is
+
+execute is
+	r_s38_loan_info	ref [S38_KREDIT_INFO];
+	new_history [HISTORY_STATES];
+	old_history_coef [HISTORY_STATES];
+begin
+	
+if P_MESS = 'BEGIN' then
+	
+	&debug('Операция S38_MARKING_L активирована',0)
+	&debug('Идет поиск по S38_KREDIT_INFO на совпадение по счету',0)
+
+-------------------------------------------------------------------------------------
+
+	/* Актуальная ссылка из справочника */	
+	if DOCUMENT.[ACC_KT].[TO_PRODUCT].[CODE] = 'PR_CRED' then
+		&debug('Кредитовый счет относится к Кредитам',0)
+	elsif DOCUMENT.[ACC_DT].[TO_PRODUCT].[CODE] = 'PR_CRED' then
+		&debug('Дебетовый счет относится к Кредитам',0)
+	else
+		&debug('Не найдена принадлежность к Кредитам ни у одного счета.',0)
+	end if;
+	
+-------------------------------------------------------------------------------------
+	
+	if DOCUMENT.[ACC_KT].[TO_PRODUCT].[CODE] = 'PR_CRED' OR DOCUMENT.[ACC_DT].[TO_PRODUCT].[CODE] = 'PR_CRED' then
+		begin
+			select x(x) in [S38_KREDIT_INFO] all
+				where
+				(x.[NUM_DOG_CRED].[ACCOUNT] = DOCUMENT.ACC_KT OR x.[NUM_DOG_CRED].[ACCOUNT] = DOCUMENT.ACC_DT)
+				AND
+				(x.[DATE_END] is null OR x.[DATE_END] >= [SYSTEM].[OP_DATE])
+				AND
+				x.[DATE_START] <= [SYSTEM].[OP_DATE]
+				fetch 1
+				into r_s38_loan_info;
+			exception when NO_DATA_FOUND then
+				&debug('Поиск не нашел совпадений.',0)
+		end;
+		
+		-- Проверка что-бы не создавать лишние записи
+		begin
+			locate old_history_coef  in DOCUMENT.[HISTORY_STATE]
+				where old_history_coef.[STATE] = 'S38_NOTE_CAT' 
+				AND old_history_coef.[ADD_INFO] = r_s38_loan_info.[category].[koef]
+				fetch 1;
+				
+			exception when NO_DATA_FOUND then
+				&debug('Поиск не нашел совпадений.',0)
+		end;
+		
+		if r_s38_loan_info is not null AND old_history_coef.[STATE] is null then	
+		&debug('Найдена соответствующая запись в S38_KREDIT_INFO.',0)
+			
+			new_history.[DATE] := sysdate;
+			new_history.[STATE] := 'S38_NOTE_CAT';
+			new_history.[ADD_INFO] := r_s38_loan_info.[category].[koef];
+			
+			insert new_history into DOCUMENT.[HISTORY_STATE];
+	
+		&debug('В массив HISTORY_STATE документа проводки 
+			добавлена новая запись со значением Коэффицента',0)
+		end if;
+			
+			
+	end if;
+end if;
+
+end;
+end;
+end;

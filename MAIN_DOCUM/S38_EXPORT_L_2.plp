@@ -1,0 +1,350 @@
+class MAIN_DOCUM;
+
+@import_plsql(true)
+@name('S38 Выгрузка документов льготных кредитов')
+static method S38_EXPORT_L_2 is
+
+pragma macro(lib_ooxml,'::[SHABLON_DOC].[LIB_OOXML]');
+pragma macro(xl,'::[OOXML].[API_XL]');
+
+pragma include(::[RUNTIME].[CSMD]);
+pragma include(::[RUNTIME].[DEBUG_MACRO]);
+pragma include(::[OOXML].[API_XL]);
+pragma macro(orsa,'::[OOXML].[API_ORSA]');
+
+PRAGMA MACRO (xml,'[XML_DOM]');
+
+-- -------------------------------------------
+
+procedure add_text_node(p_node	in out nocopy &xml.DOMNode, 
+			p_xml_doc			in out nocopy &xml.DOMDocument, 
+			p_new_node_name 	in [STRING_100], 
+			p_text 				in [STRING_1000], 
+			p_write_empty 		in boolean default false)is
+begin
+	if p_text is not null then
+		&xml.appendChild(&xml.appendChild(p_node, &xml.makeNode(&xml.createElement(p_xml_doc, p_new_node_name))),
+						 &xml.makeNode(&xml.createTextNode(p_xml_doc, p_text)));
+	elsif p_text is null and  p_write_empty then
+		&xml.appendChild(p_node,&xml.makeNode(&xml.createElement(p_xml_doc, p_new_node_name)));
+	end if;
+end;
+			
+---- -------------------------------------------	
+
+procedure Draw_report(DATE_START date,DATE_END date) is
+	n_i integer default 2;
+	type t_arr_main_doc is table of ref [MAIN_DOCUM];
+	
+	arr_main_doc t_arr_main_doc;
+	arr_main_count t_arr_main_doc;
+	memo_add_info [MEMO];
+	i_count_ref [INTEGER];
+	
+	
+begin
+	DATE_END := DATE_END + 1;
+	
+	
+	&xl.Open_Sheet(1);
+	&xl.merge(1,1,1,10);
+	&xl.cell(1,1,'Отчет по "S38 Выгрузка документов льготных кредитов"',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_row_height(25,2);
+	
+	&xl.set_column_width(20,1);
+	&xl.cell(n_i, 1, 'ID Документа',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_column_width(19,2);
+	&xl.cell(n_i, 2, 'Номер Документа',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_column_width(29,3);
+	&xl.cell(n_i, 3, 'Астр. дата проводки',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_column_width(18,4);
+	&xl.cell(n_i, 4, 'Валюта по дебету',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_column_width(25,5);
+	&xl.cell(n_i, 5, 'Номер счёта по дебету',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_column_width(18,6);
+	&xl.cell(n_i, 6, 'Валюта по кредиту',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_column_width(25,7);
+	&xl.cell(n_i, 7, 'Номер счёта по кредиту',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_column_width(18,8);
+	&xl.cell(n_i, 8, 'Сумма по дебету',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_column_width(27,9);
+	&xl.cell(n_i, 9, 'Назначение платежа',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	&xl.set_column_width(29,10);
+	&xl.cell(n_i, 10, 'Дополнительная информация',p_horizontal == &xl.xl_av_center,p_vertical == &xl.xl_av_center);
+	
+	
+
+	
+	select x(distinct x%id) in ::[MAIN_DOCUM] all
+	where x.[HISTORY_STATE].[STATE] = 'S38_NOTE_CAT' 
+		AND x.[DATE_PROV] >= DATE_START
+		AND x.[DATE_PROV] <= DATE_END
+		into arr_main_doc;
+
+	
+	for i in 1..arr_main_doc.count
+	loop
+		select y(y.ADD_INFO) in arr_main_doc(i).[HISTORY_STATE] 
+		where y.[STATE] = 'S38_NOTE_CAT'
+		order by y.[DATE] desc
+		fetch 1 
+		into memo_add_info;
+							
+		n_i := n_i + 1;
+		
+		&xl.put(n_i, 1, arr_main_doc(i)%id);
+		&xl.cell(n_i, 2, to_char(arr_main_doc(i).[DOCUMENT_NUM]),p_horizontal == &xl.xl_ah_right);
+		&xl.cell(n_i, 3, to_date(arr_main_doc(i).[ASTR_DATE_PROV],'DD.MM.YYYY HH24:MI:SS'),p_horizontal == &xl.xl_ah_right);
+		&xl.cell(n_i, 4, to_char(arr_main_doc(i).[ACC_DT].[FINTOOL].[CODE_ISO]),p_horizontal == &xl.xl_ah_right);
+		&xl.cell(n_i, 5, arr_main_doc(i).[ACC_DT].[MAIN_V_ID],p_horizontal == &xl.xl_ah_right);
+		&xl.cell(n_i, 6, to_char(arr_main_doc(i).[ACC_KT].[FINTOOL].[CODE_ISO]),p_horizontal == &xl.xl_ah_right);
+		&xl.cell(n_i, 7, arr_main_doc(i).[ACC_KT].[MAIN_V_ID],p_horizontal == &xl.xl_ah_right);
+		&xl.cell(n_i, 8, to_char(arr_main_doc(i).[SUM]),p_horizontal == &xl.xl_ah_right);
+		&xl.cell(n_i, 9, arr_main_doc(i).[NAZN],p_horizontal == &xl.xl_ah_right);
+		&xl.cell(n_i, 10,memo_add_info,p_horizontal == &xl.xl_ah_right);
+	end loop;
+end;
+			
+-- -------------------------------------------	
+
+FUNCTION clob_to_blob(p_clob_in IN CLOB)
+    RETURN BLOB
+  IS
+    v_blob 			 BLOB;
+    v_offset 		 INTEGER := 1;
+    v_buffer_varchar VARCHAR2(32000);
+    v_buffer_raw 	 RAW(32000);
+    v_buffer_size 	 binary_integer := 32000;
+  BEGIN
+    dbms_lob.createtemporary(v_blob, TRUE);
+ 
+    FOR i IN 1 .. ceil(dbms_lob.getlength(p_clob_in) / v_buffer_size)
+     
+    loop
+      dbms_lob.READ(p_clob_in, v_buffer_size, v_offset, v_buffer_varchar);
+      v_buffer_raw := utl_raw.cast_to_raw(v_buffer_varchar);
+      dbms_lob.writeappend(v_blob, utl_raw.LENGTH(v_buffer_raw), v_buffer_raw);
+      v_offset := v_offset + v_buffer_size;
+    END loop;
+    RETURN v_blob;
+  END;
+  
+-- -------------------------------------------	
+
+procedure Draw_XMLreport(DATE_START date,DATE_END date) is
+	i integer default 1;
+	p					&xml.Parser;
+	xml_doc				&xml.DOMDocument;
+	main_node			&xml.DOMNode;
+	level01_node 		&xml.DOMNode;
+	level01_elem 		&xml.DOMElement;
+	level02_node 		&xml.DOMNode;
+	level02_elem 		&xml.DOMElement;
+	xml_clob 			clob;
+	xml_blob 			blob;
+begin	
+	DATE_END := DATE_END + 1;
+	
+	&xml.initialize;
+	p := &xml.newParser;
+ 	&xml.parseBuffer(p,'<?xml version="1.0" encoding="Windows-1251"?><elm/>');
+	xml_doc := &xml.getDocument(p);
+	
+	main_node 		:= &xml.makeNode(xml_doc);						
+    level01_elem 	:= &xml.createElement(xml_doc, 'DOCS_KOEF_LOAN');
+	level01_node 	:= &xml.makeNode(level01_elem);				
+	
+	&xml.replaceChild(main_node, level01_node, &xml.makeNode(&xml.getDocumentElement(xml_doc))); 
+
+	&xml.setAttribute(level01_elem, 'created', sysdate);
+	&xml.setAttribute(level01_elem, 'author', ::[USER].[LIB].userid().[NAME]);
+	&xml.setAttribute(level01_elem, 'comment', 'Выгрузка документов льготных кредитов');
+
+	for (select distinct x(
+				x%id : C_DOCUMENT_L,
+				x.[DOCUMENT_NUM] : C_DOCUMENT_NUM,
+				NVL(x.[USER_EXEC].[NAME],'Null') : C_NAME_USER,
+				x.[ACC_DT].[MAIN_V_ID] : C_ACC_DT_L,
+				x.[ACC_KT].[MAIN_V_ID] : C_ACC_KT_L,
+				x.[SUM] : C_SUMM
+				,NVL(x.[REQ_MAN].[NAME],'Null') : C_REQ_NAME,
+				(select y(y.[ADD_INFO]) in x.[HISTORY_STATE]
+					where y.[STATE] = 'S38_NOTE_CAT'
+					order by y.[DATE] desc
+					fetch 1 
+				) :C_ADD_INFO
+				)
+		in ::[MAIN_DOCUM] all
+		where x.[HISTORY_STATE].[STATE] = 'S38_NOTE_CAT'
+		AND x.[DATE_PROV] >= DATE_START
+		AND x.[DATE_PROV] <= DATE_END
+		)
+		
+	loop
+		
+		
+		
+		declare
+			level03_node 		&xml.DOMNode;
+			level03_elem 		&xml.DOMElement;
+			level04_node 		&xml.DOMNode;
+			level04_elem 		&xml.DOMElement;
+		begin
+
+			
+			level03_elem 	:= &xml.createElement(xml_doc, 'DOCUM_'||i||'_NODE');
+			level03_node 	:= &xml.makeNode(level03_elem);
+			&xml.appendChild(level01_node,level03_node);				
+			&xml.setAttribute(level03_elem, 'record', x.C_DOCUMENT_L);
+
+			add_text_node(level03_node, xml_doc, 'Номер', 					x.C_DOCUMENT_NUM);				
+			add_text_node(level03_node, xml_doc, 'ФИО_исполнителя',  		x.C_NAME_USER);				
+			add_text_node(level03_node, xml_doc, 'Номер_счёта_по_дебету',   x.C_ACC_DT_L);			
+			add_text_node(level03_node, xml_doc, 'Номер_счёта_по_кредиту',  x.C_ACC_KT_L);		
+			add_text_node(level03_node, xml_doc, 'Сумма_по_дебету', 		x.C_SUMM);			
+			add_text_node(level03_node, xml_doc, 'Наименование_плательщика',x.C_REQ_NAME);
+			
+			level04_elem 	:= &xml.createElement(xml_doc, 'DOCUM_'||i||'_KOEF');
+			level04_node 	:= &xml.makeNode(level04_elem);
+			&xml.appendChild(level03_node,level04_node);
+			
+			add_text_node(level04_node, xml_doc, 'Дополнительная_информация',x.C_ADD_INFO);
+			
+			i := i + 1;
+		end;
+	end loop;
+
+	dbms_lob.createtemporary(xml_clob, TRUE);				
+	&xml.writeToCLOB(xml_doc,xml_clob);
+	xml_blob := clob_to_blob(xml_clob);
+	::[OOXML].[API_ORSA].putReport2Run(xml_blob, 'xml', 'S38 Выгрузка xml');
+end;
+	
+-- -------------------------------------------	
+	
+S38_EXPORT_L_2 (
+	@name('Start') P_DATE_START in [DATE],
+	@name('End')   P_DATE_END   in [DATE],
+	@name('ToXLS') P_TO_XLS     in [BOOLEAN],
+	@name('ToXML') P_TO_XML     in [BOOLEAN]
+) is
+
+-- -------------------------------------------	
+
+validate is
+begin
+	if P_MESSAGE = 'DEFAULT' then 
+			P_DATE_START := to_date('17/10/2006','DD/MM/YYYY');
+			P_DATE_END := to_date('20/10/2006','DD/MM/YYYY');	
+			P_TO_XLS 	:= true;
+	end if;
+
+end;
+
+-- -------------------------------------------	
+
+execute is
+	blob_iblob_new blob;
+	s_file_path varchar2(1000);
+	s_file_name varchar2(500);
+	
+	startdate date;
+  	enddate date;
+begin
+	
+--Проверка---------------
+	
+	if     P_DATE_END is null 
+		   AND P_DATE_START is null
+		   AND (P_TO_XLS is null AND P_TO_XML is null)
+		then
+			pragma error('Нельзя создать запись.' || NL$ ||
+						 'Поля "Дата окончания" и "Дата начала" не заполнены.' || NL$ ||' Поля обязательны к заполнению.'
+						 );
+		end if;
+		
+		if     P_DATE_END is null 
+		   AND P_DATE_START is null 
+		then
+			pragma error('Нельзя создать запись.' || NL$ ||
+						 'Поля "Дата окончания" и "Дата начала" не заполнены.' || NL$ ||' Поля обязательны к заполнению.');
+		end if;
+		
+		if P_DATE_START is null then
+			pragma error('Нельзя создать запись.' || NL$ ||
+						 'Поле "Дата начала" не заполнено.' || NL$ ||' Поле обязательно к заполнению.');
+		end if;
+		
+		if P_DATE_END is null then
+			pragma error('Нельзя создать запись.' || NL$ ||
+						 'Поле "Дата окончания" не заполнено.' || NL$ ||' Поле обязательно к заполнению.');
+		end if;
+		
+		
+--Проверка---------------		
+
+	if P_TO_XLS then
+		
+		startdate := sysdate;
+		
+		debug_pipe('Начинаю рисовать EXCEL файл.',0);
+		
+			::[SHABLON_DOC].[LIB_OOXML].load_blob('S38_EXPORT_LOAN',
+			blob_iblob_new, null, 'S38_TEST' , null, null
+		);
+		
+		&xl.init_xls;
+		if blob_iblob_new is not null then
+			&debug('File is not null',0)
+		end if;
+		
+		if not &xl.open_file(blob_iblob_new)  then
+			pragma error('В справочнике'||::[SHABLON_DOC]%classname
+				||'" не найден шаблон с кодом'
+			);
+		end if;
+		Draw_report(P_DATE_START,P_DATE_END);
+		
+		&xl.finish(blob_iblob_new);
+		::[OOXML].[API_ORSA].putReport2Run(blob_iblob_new, 'xlsx', 'S38 Выгрузка XLS');
+	 
+		s_file_path := ::[SYSTEM_PARAMS].[GET]('PATH', true);
+		s_file_name :=	'S38_EXPORT_LOAN';
+		&lib_ooxml.write_to_file(blob_iblob_new,s_file_path,s_file_name);
+		debug_pipe('Нарисовано.',0);
+		
+		enddate := sysdate;
+		debug_pipe('Time of implementation EXCEL = ' || (enddate - startdate),0);
+	
+	end if;
+	
+-- ---------------
+
+	if P_TO_XML then
+		
+		startdate := sysdate;
+		
+		debug_pipe('Начинаю рисовать XML файл.',0);
+		Draw_XMLreport(P_DATE_START,P_DATE_END);
+		debug_pipe('Нарисовано.',0);
+		
+		enddate := sysdate;
+	
+		debug_pipe('Time of implementation .XML = ' || (enddate - startdate),0);
+			
+	end if;
+	
+-- ---------------	
+end;
+end;
+end;
