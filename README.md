@@ -24,7 +24,7 @@
 
 <br>
 
-## 2. <a href="https://github.com/phello57/cftdevelop/blob/main/S38_KREDIT_LOAN/NEW_AUTO.plp">Код<a/> 
+## 2. <a href="https://github.com/phello57/cftdevelop/blob/main/S38_KREDIT_INFO/NEW_AUTO.plp">Код<a/> 
 Так же нужно было сделать собственный вид кредита в системе, что бы не мешать другим студентам, ниже в справочнике находятся именно такие кредиты.
 <br>Справочник с историей :
 <br>![image](https://user-images.githubusercontent.com/103268341/214565714-c971a9e9-614f-4dca-bf5b-199216cef0b4.png)
